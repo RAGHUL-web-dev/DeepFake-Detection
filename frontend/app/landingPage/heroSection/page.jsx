@@ -1,5 +1,7 @@
 import Link from "next/link";
 import DeepfakeRealitySection from "../DeepFakeReality/page";
+import LandingServices from "../Intro/page";
+import ServiceIntro from "../serviceIntro/page";
 
 function HeroSection() {
     return (
@@ -72,6 +74,8 @@ function HeroSection() {
         </section>
 
         <DeepfakeRealitySection />
+        <LandingServices />
+        <ServiceIntro />
         </>
         
     );
