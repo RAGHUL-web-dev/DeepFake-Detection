@@ -20,7 +20,6 @@ function Footer() {
             <h3 className="text-sm font-medium mb-4 text-black">Product</h3>
             <ul className="space-y-3 text-sm text-black/70">
               <li><Link href="#">Download</Link></li>
-              <li><Link href="#">Antigravity</Link></li>
               <li><Link href="#">Docs</Link></li>
               <li><Link href="#">Changelog</Link></li>
             </ul>
@@ -48,7 +47,7 @@ function Footer() {
       {/* BOTTOM BAR */}
       <div className="border-t border-black/10">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-black/60">
-          <span>Cafeio Solutions</span>
+          <span>Deep Shield</span>
 
           <div className="flex gap-6">
             <Link href="#" className="hover:text-black transition">About</Link>

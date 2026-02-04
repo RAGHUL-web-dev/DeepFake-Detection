@@ -13,7 +13,7 @@ function Navbar() {
         { name: 'Product', href: '/product' },
         { name: 'Solutions', href: '/solutions' },
         { name: 'Resources', href: '/resources' },
-        { name: 'Pricing', href: '/pricing' },
+        { name: 'Pricing', href: '/dashboard' },
     ];
 
     return (
