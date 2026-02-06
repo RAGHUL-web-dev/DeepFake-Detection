@@ -11,12 +11,12 @@ function SideBar({children}) {
   const pathname = usePathname()
     return (
         <>
-        <Layout style={{minHeight : '100vh'}}>
+        <Layout>
           <Sider width={260} collapsible={true} style={{backgroundColor : '#161616'}}>
             <div className="logo" style={{height : '32px', margin : '16px', textAlign : 'center'}}>
               <span style={{color : 'white', fontSize : '20px', fontWeight : 'bold'}}>DeepFake</span>
             </div>
-            <Menu theme="dark" mode="inline" defaultSelectedKeys={[pathname]} style={{backgroundColor : '#161616'}}>
+            <Menu theme="dark" mode="inline" defaultSelectedKeys={[pathname]} style={{backgroundColor : '#161616', padding : '16px'}}>
               <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
                 <Link href="/dashboard">Dashboard</Link>
               </Menu.Item>
@@ -33,11 +33,11 @@ function SideBar({children}) {
           </Sider>
           <Layout>
         <Header style={{ padding: 0, background: '#161616' }} />
-        <Content style={{ margin: '24px 16px 0' }}>
+        <Content style={{ margin: '24px 16px 0', marginBottom : '24px' }}>
           <div
             style={{
               padding: 24,
-              minHeight: 360,
+              minHeight: 760,
               background: '#161616',
               borderRadius: '12px',
             }}
