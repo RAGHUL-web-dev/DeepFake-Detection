@@ -136,3 +136,18 @@ body {
     @apply bg-background text-foreground;
     }
 }
+
+@keyframes scroll {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+.animate-scroll {
+  animation: scroll 1.5s infinite;
+}
