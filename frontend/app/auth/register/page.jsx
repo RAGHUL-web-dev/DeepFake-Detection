@@ -4,15 +4,24 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Shield, User, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useRegisterUser } from '@/hooks/authHooks';
 
 export default function AuthRegister() {
-    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: ''
+    });
+
+    const { mutate: register, isPending: isLoading, error } = useRegisterUser();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.id]: e.target.value });
+    }
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        // Simulate delay
-        setTimeout(() => setIsLoading(false), 1500);
+        register(formData);
     };
 
     return (
@@ -49,6 +58,12 @@ export default function AuthRegister() {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-medium">
+                            {error.message}
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">
                             Full Name
@@ -59,6 +74,8 @@ export default function AuthRegister() {
                                 id="name"
                                 type="text"
                                 placeholder="Agent Name"
+                                value={formData.name}
+                                onChange={handleChange}
                                 required
                                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 focus:bg-white/[0.05] transition-all"
                             />
@@ -75,6 +92,8 @@ export default function AuthRegister() {
                                 id="email"
                                 type="email"
                                 placeholder="agent@company.com"
+                                value={formData.email}
+                                onChange={handleChange}
                                 required
                                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 focus:bg-white/[0.05] transition-all"
                             />
@@ -82,15 +101,17 @@ export default function AuthRegister() {
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="pass" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">
+                        <label htmlFor="password" title='pass' className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">
                             Password
                         </label>
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-[var(--color-primary-light)] transition-colors" />
                             <input
-                                id="pass"
+                                id="password"
                                 type="password"
                                 placeholder="••••••••••••"
+                                value={formData.password}
+                                onChange={handleChange}
                                 required
                                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 focus:bg-white/[0.05] transition-all"
                             />

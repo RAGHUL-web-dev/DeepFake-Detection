@@ -5,46 +5,60 @@ const ErrorHandler = require("../utils/errorHandler")
 
 
 // register user
-exports.authRegisterUser = catchAsyncError(async(req, res, next) => {
+exports.authRegisterUser = catchAsyncError(async (req, res, next) => {
     const { email, password, name, avatar } = req.body;
 
-    if(!email || !password || !name){
-        return next(new ErrorHandler("Please provide all fields", 400))
+    if (!email || !password || !name) {
+        return next(new ErrorHandler("Please provide all fields", 400));
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        return next(new ErrorHandler("User already exists", 400));
     }
 
     const user = await User.create({
-        email,  
+        email,
         password,
         name,
         avatar
-    })
+    });
 
-    res.status(201).json({
-        success : true,
-        user
-    })
-})
+    sendToken(user, 201, res);
+});
 
 
-exports.authLoginUser = catchAsyncError(async(req, res, next) => {
+exports.authLoginUser = catchAsyncError(async (req, res, next) => {
     const { email, password } = req.body;
 
-    if(!email || !password){
-        return next(new ErrorHandler("Please provide all fields", 400))
+    if (!email || !password) {
+        return next(new ErrorHandler("Please provide all fields", 400));
     }
 
-    const user = await User.findOne({email}).select("+password")
+    const user = await User.findOne({ email }).select("+password");
 
-    if(!user){
-        return next(new ErrorHandler("Invalid credentials", 401))
+    if (!user) {
+        return next(new ErrorHandler("Invalid credentials", 401));
     }
 
-    const isPasswordMatched = await user.comparePasword(password)
+    const isPasswordMatched = await user.comparePassword(password);
 
-    if(!isPasswordMatched){
-        return next(new ErrorHandler("Invalid credentials", 401))
+    if (!isPasswordMatched) {
+        return next(new ErrorHandler("Invalid credentials", 401));
     }
 
-    sendToken(user, 200, res)
-})
+    sendToken(user, 200, res);
+});
 
+
+exports.authLogoutUser = catchAsyncError(async (req, res, next) => {
+    res.cookie("token", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+    });
+
+    res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+    });
+});

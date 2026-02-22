@@ -117,9 +117,9 @@ userSchema.methods.getJWTToken = function(){
 }
 
 
-userSchema.methods.comparePasword = function(enterPassword){
+userSchema.methods.comparePassword = async function(enterPassword){
     try {
-        return bcrypt.compare(enterPassword, this.password)
+        return await bcrypt.compare(enterPassword, this.password)
     } catch (error) {
         throw new Error("Invalid password")
     }

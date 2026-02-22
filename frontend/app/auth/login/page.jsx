@@ -4,16 +4,24 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useLoginUser } from '@/hooks/authHooks';
 
 export default function AuthLogin() {
     const [showPassword, setShowPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        email: '',
+        password: ''
+    });
+
+    const { mutate: login, isPending: isLoading, error } = useLoginUser();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.id]: e.target.value });
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        // Simulate auth delay
-        setTimeout(() => setIsLoading(false), 1500);
+        login(formData);
     };
 
     return (
@@ -50,6 +58,12 @@ export default function AuthLogin() {
 
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {error && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs font-medium text-center">
+                            {error.message}
+                        </div>
+                    )}
+
                     <div className="space-y-2">
                         <label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-white/40 ml-1">
                             Email Address
@@ -60,6 +74,8 @@ export default function AuthLogin() {
                                 id="email"
                                 type="email"
                                 placeholder="name@company.com"
+                                value={formData.email}
+                                onChange={handleChange}
                                 required
                                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-4 text-white placeholder:text-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 focus:bg-white/[0.05] transition-all"
                             />
@@ -68,7 +84,7 @@ export default function AuthLogin() {
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between ml-1">
-                            <label htmlFor="pass" className="text-xs font-bold uppercase tracking-widest text-white/40">
+                            <label htmlFor="password" title='pass' className="text-xs font-bold uppercase tracking-widest text-white/40">
                                 Password
                             </label>
                             <Link href="#" className="text-xs font-semibold text-[var(--color-primary-light)] hover:text-white transition-colors">
@@ -78,9 +94,11 @@ export default function AuthLogin() {
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-[var(--color-primary-light)] transition-colors" />
                             <input
-                                id="pass"
+                                id="password"
                                 type={showPassword ? 'text' : 'password'}
                                 placeholder="••••••••••••"
+                                value={formData.password}
+                                onChange={handleChange}
                                 required
                                 className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-3.5 pl-11 pr-12 text-white placeholder:text-white/10 focus:outline-none focus:border-[var(--color-primary)]/50 focus:bg-white/[0.05] transition-all"
                             />

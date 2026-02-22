@@ -267,6 +267,19 @@
 
 ## How to Run Locally
 
+
+
+## Dashboard
+
+    ### sidebar
+        1. Dashboard
+        2. Results
+        3. Knowledge Hub
+        4. Provenance History
+        5. Feedback / Report
+        6. Profile
+        7. Logout (bottom)
+
 ### Backend
 python -m venv venv
 venv\Scripts\activate
