@@ -11,11 +11,11 @@ function Navbar() {
     const { user, isAuthenticated, logout } = useAuthStore();
 
     const products = [
-        { id: 'image', name: 'Image Detection', href: '/products/image-detection', description: 'Advanced neural networks to identify AI-generated or manipulated images with pixel-perfect precision.' },
-        { id: 'video', name: 'Video Analysis', href: '/products/video-analysis', description: 'Real-time deepfake detection in video streams using temporal consistency checks and facial landmark analysis.' },
-        { id: 'voice', name: 'Voice Cloning', href: '/products/voice-cloning', description: 'Identify synthetic speech and voice clones using acoustic feature extraction and pattern recognition.' },
-        { id: 'text', name: 'Text Forensics', href: '/products/text-analysis', description: 'Detect AI-generated text, plagiarism, and misinformation using sophisticated linguistic modeling.' },
-        { id: 'audio', name: 'Audio Authentication', href: '/products/audio-forensics', description: 'Verify the authenticity of audio recordings by analyzing digital signatures and background noise consistency.' },
+        { id: 'image', name: 'Image Detection', href: '/deepfakeVerification/imageDetection', description: 'Advanced neural networks to identify AI-generated or manipulated images with pixel-perfect precision.' },
+        { id: 'video', name: 'Video Analysis', href: '/deepfakeVerification/videoDetection', description: 'Real-time deepfake detection in video streams using temporal consistency checks and facial landmark analysis.' },
+        { id: 'voice', name: 'Voice Cloning', href: '/deepfakeVerification/voiceDetection', description: 'Identify synthetic speech and voice clones using acoustic feature extraction and pattern recognition.' },
+        { id: 'text', name: 'Text Forensics', href: '/deepfakeVerification/textDetection', description: 'Detect AI-generated text, plagiarism, and misinformation using sophisticated linguistic modeling.' },
+        { id: 'audio', name: 'Audio Authentication', href: '/deepfakeVerification/audioDetection', description: 'Verify the authenticity of audio recordings by analyzing digital signatures and background noise consistency.' },
     ];
 
     const [hoveredProduct, setHoveredProduct] = useState(products[0]);
@@ -148,7 +148,7 @@ function Navbar() {
                     <div className="hidden lg:flex items-center gap-1">
                         {/* Mega Product Dropdown */}
                         <Dropdown
-                            dropdownRender={productDropdownRender}
+                            popupRender={productDropdownRender}
                             placement="bottomLeft"
                             trigger={['click']}
                         >

@@ -12,6 +12,7 @@ const DetectionNav = () => {
         { name: 'Image', href: '/deepfakeVerification/imageDetection', icon: <Image size={18} /> },
         { name: 'Video', href: '/deepfakeVerification/videoDetection', icon: <Video size={18} /> },
         { name: 'Voice', href: '/deepfakeVerification/voiceDetection', icon: <Mic size={18} /> },
+        { name: 'Text', href: '/deepfakeVerification/textDetection', icon: <Mic size={18} /> },
     ];
 
     return (
