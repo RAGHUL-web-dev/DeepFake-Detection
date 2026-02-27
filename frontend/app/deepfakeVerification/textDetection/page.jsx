@@ -300,19 +300,19 @@ const TextDetection = () => {
                                         <>
                                             {/* Verdict Banner */}
                                             <div className={`rounded-2xl p-6 mb-8 flex items-center gap-6 ${resultData.prediction === 1
-                                                    ? 'bg-red-500/10 border border-red-500/20'
-                                                    : 'bg-green-500/10 border border-green-500/20'
+                                                ? 'bg-red-500/10 border border-red-500/20'
+                                                : 'bg-green-500/10 border border-green-500/20'
                                                 }`}>
                                                 <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${resultData.prediction === 1
-                                                        ? 'bg-red-500/20 text-red-500'
-                                                        : 'bg-green-500/20 text-green-500'
+                                                    ? 'bg-red-500/20 text-red-500'
+                                                    : 'bg-green-500/20 text-green-500'
                                                     }`}>
                                                     {resultData.prediction === 1 ? <AlertTriangle size={32} /> : <CheckCircle size={32} />}
                                                 </div>
                                                 <div>
                                                     <h2 className={`text-3xl font-bold mb-1 ${resultData.prediction === 1 ? 'text-red-500' : 'text-green-500'
                                                         }`}>
-                                                        {resultData.result.toUpperCase()} DETECTED
+                                                        {(resultData.result || 'Result').toUpperCase()} DETECTED
                                                     </h2>
                                                     <p className={resultData.prediction === 1 ? 'text-red-400/80' : 'text-green-400/80'}>
                                                         {resultData.prediction === 1

@@ -29,8 +29,31 @@ def transform_text(text):
 
     return " ".join(y)
 
-tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
-model = pickle.load(open("model.pkl", "rb"))
+tfidf = pickle.load(open(vectorizer_path, 'rb'))
+model = pickle.load(open(model_path, 'rb'))
+
+# 🔥 HOTFIX: Check if vectorizer is fitted
+if not hasattr(tfidf, "idf_"):
+    print("⚠️ TFIDF NOT FITTED! Fitting at runtime...")
+
+    import pandas as pd
+    
+    # Load same training dataset used before
+    data_path = os.path.join(current_dir, "spam.csv")
+
+    if os.path.exists(data_path):
+        df = pd.read_csv(data_path, encoding="latin-1")
+
+        corpus = []
+
+        for msg in df["v2"]:
+            corpus.append(transform_text(msg))
+
+        tfidf.fit(corpus)
+
+        print("✅ TFIDF fitted successfully at runtime")
+    else:
+        print("❌ spam.csv NOT FOUND — cannot fit TFIDF")
 
 st.title("Email/SMS Spam Classifier")
 
