@@ -12,11 +12,36 @@ const TextDetection = () => {
     const [resultData, setResultData] = useState(null);
     const [copied, setCopied] = useState(false);
 
-    const startAnalysis = () => {
+    const startAnalysis = async () => {
         if (!inputText.trim()) return;
 
         setAnalysisState('analyzing');
-        // Analysis will be handled by TextAnalysisVisualization onComplete
+
+        try {
+            const res = await fetch("http://localhost:8000/predict/text", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: inputText })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setResultData({
+                    error: true,
+                    message: data.detail || 'API failed'
+                });
+            } else {
+                setResultData(data);
+            }
+        } catch (err) {
+            setResultData({
+                error: true,
+                message: err.message || 'Failed to connect to backend'
+            });
+        }
+
+        setAnalysisState('result');
     };
 
     const reset = () => {
@@ -239,25 +264,7 @@ const TextDetection = () => {
                                         <TextAnalysisVisualization
                                             text={inputText}
                                             onComplete={() => {
-                                                setResultData({
-                                                    score: 92,
-                                                    verdict: 'AI-Generated Content Detected',
-                                                    confidence: 'High',
-                                                    metrics: {
-                                                        perplexity: '1.2 (Very Low - Typical of AI)',
-                                                        burstiness: '0.3 (Uniform - AI Pattern)',
-                                                        repetition: '12% (Above Threshold)',
-                                                        sentiment: 'Neutral/Flat',
-                                                        linguistic_diversity: 'Limited vocabulary range'
-                                                    },
-                                                    details: {
-                                                        model_signature: 'GPT-3.5/4 Architecture Detected',
-                                                        probability: '92.3%',
-                                                        timestamp: new Date().toISOString(),
-                                                        processing_time: '0.8s'
-                                                    }
-                                                });
-                                                setAnalysisState('result');
+                                                // Handled by API call
                                             }}
                                         />
                                     </div>

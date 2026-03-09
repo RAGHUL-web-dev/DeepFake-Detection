@@ -62,9 +62,42 @@ const ImageDetection = () => {
         }, 1500);
     };
 
-    const startAnalysis = () => {
+    const startAnalysis = async () => {
         setAnalysisState('analyzing');
-        // Logic moved to CNNVisualization onComplete callback
+
+        try {
+            const formData = new FormData();
+            if (selectedFile) {
+                formData.append("file", selectedFile);
+            } else if (foundImages.length > 0) {
+                const response = await fetch(foundImages[0]);
+                const blob = await response.blob();
+                formData.append("file", blob, "image.jpg");
+            }
+
+            const res = await fetch("http://localhost:8000/predict/image", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setResultData({
+                    error: true,
+                    message: data.detail || 'API failed'
+                });
+            } else {
+                setResultData(data);
+            }
+        } catch (err) {
+            setResultData({
+                error: true,
+                message: err.message || 'Failed to connect to backend'
+            });
+        }
+
+        setAnalysisState('result');
     };
 
     const reset = () => {
@@ -241,17 +274,7 @@ const ImageDetection = () => {
                                         <CNNVisualization
                                             imageSrc={selectedFile ? URL.createObjectURL(selectedFile) : foundImages[0]}
                                             onComplete={() => {
-                                                setResultData({
-                                                    score: 88,
-                                                    verdict: 'Deepfake Detected',
-                                                    metadata: {
-                                                        compression: 'Abnormal (GAN artifacts)',
-                                                        lighting: 'Inconsistent directional shadows',
-                                                        noise: 'Pattern repetition detected',
-                                                        source: 'Unknown Generation Model'
-                                                    }
-                                                });
-                                                setAnalysisState('result');
+                                                // Handled by API call
                                             }}
                                         />
                                     </div>
@@ -276,19 +299,33 @@ const ImageDetection = () => {
                                 <div className="flex-1 p-8 overflow-y-auto">
 
                                     {/* Verdict Banner */}
-                                    <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 mb-8 flex items-center gap-6">
-                                        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 shrink-0">
-                                            <AlertTriangle size={32} />
+                                    {resultData.error ? (
+                                        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 mb-8 flex items-center gap-6">
+                                            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 shrink-0">
+                                                <AlertTriangle size={32} />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-3xl font-bold text-red-500 mb-1">Analysis Failed</h2>
+                                                <p className="text-red-400/80">{resultData.message}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h2 className="text-3xl font-bold text-red-500 mb-1">{resultData.verdict}</h2>
-                                            <p className="text-red-400/80">High probability of synthetic manipulation detected.</p>
+                                    ) : (
+                                        <div className={`rounded-2xl p-6 mb-8 flex items-center gap-6 ${resultData.prediction === 1 ? 'bg-red-500/10 border-red-500/20' : 'bg-green-500/10 border-green-500/20'} border`}>
+                                            <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${resultData.prediction === 1 ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+                                                {resultData.prediction === 1 ? <AlertTriangle size={32} /> : <CheckCircle size={32} />}
+                                            </div>
+                                            <div>
+                                                <h2 className={`text-3xl font-bold mb-1 ${resultData.prediction === 1 ? 'text-red-500' : 'text-green-500'}`}>{resultData.verdict}</h2>
+                                                <p className={`${resultData.prediction === 1 ? 'text-red-400/80' : 'text-green-400/80'}`}>
+                                                    {resultData.prediction === 1 ? 'High probability of synthetic manipulation detected.' : 'Image appears to be authentic.'}
+                                                </p>
+                                            </div>
+                                            <div className="ml-auto text-right">
+                                                <span className="block text-4xl font-bold text-white">{resultData.score}%</span>
+                                                <span className="text-sm text-gray-400">Confidence</span>
+                                            </div>
                                         </div>
-                                        <div className="ml-auto text-right">
-                                            <span className="block text-4xl font-bold text-white">{resultData.score}%</span>
-                                            <span className="text-sm text-gray-400">Confidence</span>
-                                        </div>
-                                    </div>
+                                    )}
 
                                     <div className="grid md:grid-cols-2 gap-8">
                                         {/* Visualization */}
@@ -301,10 +338,18 @@ const ImageDetection = () => {
                                                     className="w-full h-full object-cover filter contrast-125 brightness-75 sepia-[.5] hue-rotate-[-50deg] saturate-200"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
-                                                    <p className="text-xs font-mono text-red-400">
-                                                        <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
-                                                        ANOMALY CLUSTER DETECTED
-                                                    </p>
+                                                    {(!resultData.error && resultData.prediction === 1) && (
+                                                        <p className="text-xs font-mono text-red-400">
+                                                            <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                                                            ANOMALY CLUSTER DETECTED
+                                                        </p>
+                                                    )}
+                                                    {(!resultData.error && resultData.prediction === 0) && (
+                                                        <p className="text-xs font-mono text-green-400">
+                                                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                                            NATURAL PATTERNS IDENTIFIED
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -313,7 +358,7 @@ const ImageDetection = () => {
                                         <div className="space-y-4">
                                             <h4 className="font-semibold text-gray-300">Forensic Metadata</h4>
                                             <div className="space-y-3">
-                                                {Object.entries(resultData.metadata).map(([key, value]) => (
+                                                {!resultData.error && resultData.metadata && Object.entries(resultData.metadata).map(([key, value]) => (
                                                     <div key={key} className="flex items-center justify-between p-3 bg-[#161616] rounded-lg border border-white/5">
                                                         <span className="text-sm text-gray-500 capitalize">{key}</span>
                                                         <span className="text-sm text-white font-medium">{value}</span>
