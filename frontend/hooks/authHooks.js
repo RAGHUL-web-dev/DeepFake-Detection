@@ -1,65 +1,109 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
 import { useRouter } from 'next/navigation';
 
-const API_URL = 'http://localhost:5000/api/v1/auth'; // Adjust based on backend
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+
+// Shared fetch helper — always sends cookies
+const apiFetch = async (path, options = {}) => {
+    const res = await fetch(`${API_BASE}${path}`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        ...options,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Request failed');
+    return data;
+};
+
+// ─── AUTH Mutations ────────────────────────────────────────────────────────────
 
 export const useRegisterUser = () => {
-    const setAuth = useAuthStore((state) => state.setAuth);
     const router = useRouter();
 
     return useMutation({
-        mutationFn: async (userData) => {
-            const response = await fetch(`${API_URL}/register`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Registration failed');
-            }
-
-            return response.json();
-        },
+        mutationFn: (userData) =>
+            apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
         onSuccess: (data) => {
-            if (data.success) {
-                // No auto-login on register, redirect to login page
-                router.push('/auth/login');
-            }
+            if (data.success) router.push('/auth/login');
         },
     });
 };
 
 export const useLoginUser = () => {
-    const setAuth = useAuthStore((state) => state.setAuth);
+    const { setAuth } = useAuthStore();
     const router = useRouter();
 
     return useMutation({
-        mutationFn: async (credentials) => {
-            const response = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
-            }
-
-            return response.json();
-        },
+        mutationFn: (credentials) =>
+            apiFetch('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
         onSuccess: (data) => {
             if (data.success) {
                 setAuth(data.user, data.token);
-                router.push('/'); // Redirect to home or dashboard
+                // Role-based redirect
+                if (data.user?.role === 'admin') {
+                    router.push('/admin');
+                } else {
+                    router.push('/dashboard');
+                }
             }
         },
+    });
+};
+
+export const useLogoutUser = () => {
+    const { logout } = useAuthStore();
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: () => apiFetch('/auth/logout'),
+        onSuccess: () => {
+            logout();
+            router.push('/auth/login');
+        },
+        onError: () => {
+            // Always clear local state even if server errors
+            logout();
+            router.push('/auth/login');
+        }
+    });
+};
+
+// ─── SESSION Rehydration ───────────────────────────────────────────────────────
+
+// Call this in layouts to verify the session is still valid
+export const useCurrentUser = () => {
+    const { setUser, logout } = useAuthStore();
+
+    return useQuery({
+        queryKey: ['currentUser'],
+        queryFn: async () => {
+            const data = await apiFetch('/user/me');
+            setUser(data.user);
+            return data;
+        },
+        retry: false,
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        onError: () => {
+            logout(); // clear stale local state if session expired
+        }
+    });
+};
+
+// ─── USER Dashboard Data ───────────────────────────────────────────────────────
+
+export const useUserStats = () => {
+    return useQuery({
+        queryKey: ['userStats'],
+        queryFn: () => apiFetch('/user/me'),
+        staleTime: 1000 * 60 * 2,
+    });
+};
+
+export const useUserMedia = () => {
+    return useQuery({
+        queryKey: ['userMedia'],
+        queryFn: () => apiFetch('/user/media'),
+        staleTime: 1000 * 60 * 2,
     });
 };

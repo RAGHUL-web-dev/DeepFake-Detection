@@ -53,33 +53,42 @@ const VideoDetection = () => {
         }
     };
 
-    const startAnalysis = () => {
+    const startAnalysis = async () => {
+        if (!selectedFile) return;
         setAnalysisState('analyzing');
-        // Simulate frame-by-frame scanning animation
+
+        // Keep the frame scan animation going during API call
         let frame = 0;
         const interval = setInterval(() => {
             frame += 1;
             setScanFrame(frame);
-            if (frame >= 100) {
-                clearInterval(interval);
-                finalizeAnalysis();
-            }
+            if (frame >= 99) clearInterval(interval);
         }, 50);
-    };
 
-    const finalizeAnalysis = () => {
-        setResultData({
-            overallScore: 92,
-            verdict: 'Manipulated Content',
-            duration: '00:12',
-            resolution: '1920x1080',
-            fps: '30.0',
-            detectedArtifacts: [
-                { type: 'Lip-Sync Inconsistency', time: '00:04', confidence: 94 },
-                { type: 'Biological Pulse Lack', time: '00:07', confidence: 88 },
-                { type: 'Frame Coherence Error', time: '00:02', confidence: 91 }
-            ]
-        });
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const res = await fetch('http://localhost:8000/predict/video', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await res.json();
+            clearInterval(interval);
+            setScanFrame(100);
+
+            if (!res.ok) {
+                setResultData({ error: true, message: data.detail || 'API Error' });
+            } else {
+                setResultData(data);
+            }
+        } catch (err) {
+            clearInterval(interval);
+            setScanFrame(100);
+            setResultData({ error: true, message: err.message || 'Failed to connect to backend' });
+        }
+
         setAnalysisState('result');
     };
 
@@ -307,34 +316,60 @@ const VideoDetection = () => {
                                 {/* Results Dashboard Footer */}
                                 <div className="flex-1 p-8 grid grid-cols-12 gap-8 bg-[#1F1F1F]">
 
-                                    {/* Stats & Verdict */}
+                                 {/* Stats & Verdict */}
                                     <div className="col-span-12 md:col-span-5 space-y-6">
-                                        <div className="bg-[#161616] p-6 rounded-2xl border border-red-500/20 space-y-4">
-                                            <div className="flex justify-between items-start">
-                                                <div className="p-3 bg-red-500/10 rounded-xl text-red-500">
-                                                    <AlertTriangle size={24} />
+                                        {resultData.error ? (
+                                            <div className="bg-[#161616] p-6 rounded-2xl border border-red-500/20 space-y-4">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="p-3 bg-red-500/10 rounded-xl text-red-500"><AlertTriangle size={24} /></div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className="text-3xl font-bold">{resultData.overallScore}%</span>
-                                                    <p className="text-[10px] text-gray-500 font-bold uppercase">Confidence</p>
+                                                <div>
+                                                    <h4 className="text-xl font-bold text-red-500">Analysis Failed</h4>
+                                                    <p className="text-xs text-gray-400 mt-1">{resultData.message}</p>
+                                                    <p className="text-xs text-gray-500 mt-2">Ensure the backend is running: <span className="font-mono">uvicorn main:app --reload --port 8000</span></p>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h4 className="text-xl font-bold text-red-500 leading-tight">{resultData.verdict}</h4>
-                                                <p className="text-xs text-gray-400 mt-1">Confirmed artifacts in 3 distinct temporal zones.</p>
+                                        ) : (
+                                            <div className={`bg-[#161616] p-6 rounded-2xl border space-y-4 ${
+                                                resultData.prediction === 1 ? 'border-red-500/20' : 'border-green-500/20'
+                                            }`}>
+                                                <div className="flex justify-between items-start">
+                                                    <div className={`p-3 rounded-xl ${
+                                                        resultData.prediction === 1
+                                                            ? 'bg-red-500/10 text-red-500'
+                                                            : 'bg-green-500/10 text-green-500'
+                                                    }`}>
+                                                        {resultData.prediction === 1 ? <AlertTriangle size={24} /> : <CheckCircle size={24} />}
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-3xl font-bold">{resultData.overallScore}%</span>
+                                                        <p className="text-[10px] text-gray-500 font-bold uppercase">Confidence</p>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h4 className={`text-xl font-bold leading-tight ${
+                                                        resultData.prediction === 1 ? 'text-red-500' : 'text-green-500'
+                                                    }`}>{resultData.verdict}</h4>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        {resultData.prediction === 1
+                                                            ? `${resultData.frame_analysis?.deepfake_frames ?? '-'} / ${resultData.frame_analysis?.total_frames_analyzed ?? '-'} frames flagged as synthetic.`
+                                                            : `${resultData.frame_analysis?.real_frames ?? '-'} / ${resultData.frame_analysis?.total_frames_analyzed ?? '-'} frames verified as authentic.`
+                                                        }
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="bg-[#161616] p-4 rounded-xl border border-white/5">
                                                 <Clock size={16} className="text-gray-500 mb-2" />
-                                                <p className="text-[10px] text-gray-500 font-bold uppercase">Duration</p>
-                                                <p className="font-mono text-lg">{resultData.duration}</p>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase">Analyzed</p>
+                                                <p className="font-mono text-lg">{resultData.frame_analysis?.seconds_analyzed ?? '--'}s</p>
                                             </div>
                                             <div className="bg-[#161616] p-4 rounded-xl border border-white/5">
                                                 <BarChart3 size={16} className="text-gray-500 mb-2" />
                                                 <p className="text-[10px] text-gray-500 font-bold uppercase">Frame Data</p>
-                                                <p className="font-mono text-lg">{resultData.fps} fps</p>
+                                                <p className="font-mono text-lg">{resultData.frame_analysis?.fps ?? '--'} fps</p>
                                             </div>
                                         </div>
                                     </div>

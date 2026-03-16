@@ -19,55 +19,24 @@ const TextAnalysisVisualization = ({ text, onComplete }) => {
 
     useEffect(() => {
         let isMounted = true;
-        let progressInterval;
 
-        const performAnalysis = async () => {
-            // Start progress animation
-            progressInterval = setInterval(() => {
-                setProgress(prev => {
-                    // Don't go past 90% while waiting for network
-                    if (prev >= 90) return 90;
-                    return prev + 1;
-                });
-            }, 50);
-
-            try {
-                // Call the new FastAPI backend
-                const response = await fetch('http://localhost:8000/predict', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text }),
-                });
-
-                if (!response.ok) {
-                    throw new Error('Analysis failed');
-                }
-
-                const data = await response.json();
-
-                if (isMounted) {
+        // Pure animation — the actual API call is handled by the parent page.jsx.
+        // This component just animates and signals completion.
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 100) {
                     clearInterval(progressInterval);
-                    setProgress(100);
-
-                    // Small delay to let the 100% render before completing
-                    setTimeout(() => {
-                        onComplete(data);
-                    }, 500);
+                    if (isMounted) {
+                        // Give 100% a moment to render, then notify parent
+                        setTimeout(() => {
+                            if (isMounted) onComplete();
+                        }, 400);
+                    }
+                    return 100;
                 }
-
-            } catch (error) {
-                console.error("Error during text analysis:", error);
-                if (isMounted) {
-                    clearInterval(progressInterval);
-                    // Pass a fallback/error result so the UI doesn't hang
-                    onComplete({ error: true, message: error.message });
-                }
-            }
-        };
-
-        performAnalysis();
+                return prev + 2;
+            });
+        }, 50);
 
         const featureInterval = setInterval(() => {
             setCurrentFeature(prev => (prev + 1) % features.length);

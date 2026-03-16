@@ -13,7 +13,7 @@ function Navbar() {
     const products = [
         { id: 'image', name: 'Image Detection', href: '/deepfakeVerification/imageDetection', description: 'Advanced neural networks to identify AI-generated or manipulated images with pixel-perfect precision.' },
         { id: 'video', name: 'Video Analysis', href: '/deepfakeVerification/videoDetection', description: 'Real-time deepfake detection in video streams using temporal consistency checks and facial landmark analysis.' },
-        { id: 'voice', name: 'Voice Cloning', href: '/deepfakeVerification/voiceDetection', description: 'Identify synthetic speech and voice clones using acoustic feature extraction and pattern recognition.' },
+        // { id: 'voice', name: 'Voice Cloning', href: '/deepfakeVerification/voiceDetection', description: 'Identify synthetic speech and voice clones using acoustic feature extraction and pattern recognition.' },
         { id: 'text', name: 'Text Forensics', href: '/deepfakeVerification/textDetection', description: 'Detect AI-generated text, plagiarism, and misinformation using sophisticated linguistic modeling.' },
         { id: 'audio', name: 'Audio Authentication', href: '/deepfakeVerification/audioDetection', description: 'Verify the authenticity of audio recordings by analyzing digital signatures and background noise consistency.' },
     ];
@@ -128,11 +128,34 @@ function Navbar() {
                     <Link href="/" className="flex items-center gap-2.5 group">
                         <div className="relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary-light opacity-20 blur-lg group-hover:opacity-30 transition-opacity duration-300"></div>
-                            <svg className="w-8 h-8 relative" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect width="32" height="32" rx="6" fill="url(#logo-gradient)" />
-                                <path d="M16 8L24 16L16 24L8 16L16 8Z" fill="white" fillOpacity="0.95" />
+
+                            <svg
+                                className="w-8 h-8 relative"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M12 2L20 6V12C20 17 16.5 21.5 12 22C7.5 21.5 4 17 4 12V6L12 2Z"
+                                    fill="url(#shield-gradient)"
+                                />
+                                <path
+                                    d="M9.5 12.5L11 14L14.5 10.5"
+                                    stroke="white"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+
                                 <defs>
-                                    <linearGradient id="logo-gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                                    <linearGradient
+                                        id="shield-gradient"
+                                        x1="0"
+                                        y1="0"
+                                        x2="24"
+                                        y2="24"
+                                        gradientUnits="userSpaceOnUse"
+                                    >
                                         <stop stopColor="#5C45FD" />
                                         <stop offset="1" stopColor="#A89BFF" />
                                     </linearGradient>

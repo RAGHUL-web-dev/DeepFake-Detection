@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Providers from "./providers"
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,20 +21,26 @@ export const metadata: Metadata = {
   description: "AI-Powered Deepfake Detection Platform",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-invoke-path") || "";
+  
+  // Don't show public Navbar/Footer inside dashboard or admin portals
+  const isPortalRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Navbar />
+          {!isPortalRoute && <Navbar />}
           {children}
-          <Footer />
+          {!isPortalRoute && <Footer />}
         </Providers>
       </body>
     </html>

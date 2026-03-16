@@ -70,38 +70,51 @@ const VoiceDetection = () => {
         }
     };
 
-    const startAnalysis = () => {
+    const startAnalysis = async () => {
+        if (!selectedFile) return;
         setAnalysisState('analyzing');
+        
         if (audioRef.current && audioUrl) {
             audioRef.current.play().catch(err => console.error("Audio playback failed:", err));
         }
-        setTimeout(() => {
-            finalizeAnalysis();
-        }, 4000); // 4 second "spectral scan"
-    };
 
-    const finalizeAnalysis = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const res = await fetch('http://localhost:8000/predict/voice', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await res.json();
+            
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                setIsPlaying(false);
+            }
+
+            if (!res.ok) {
+                setResultData({
+                    error: true,
+                    message: data.detail || 'API failed'
+                });
+            } else {
+                setResultData(data);
+            }
+        } catch (err) {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+                setIsPlaying(false);
+            }
+            setResultData({
+                error: true,
+                message: err.message || 'Failed to connect to backend'
+            });
         }
-        setResultData({
-            score: 96,
-            verdict: 'Synthetic Voice Detected',
-            type: 'AI-Cloned Speech',
-            confidence: 'High',
-            metadata: {
-                samplingRate: '48.0 kHz',
-                bitDepth: '24-bit',
-                channels: 'Mono',
-                model: 'Neural TTS Engine'
-            },
-            anomalies: [
-                { title: 'Harmonic Flattening', desc: 'Lack of natural resonant peaks in high frequencies.' },
-                { title: 'Phase Discontinuity', desc: 'Subtle timing errors at phoneme transitions.' },
-                { title: 'Static Noise Profile', desc: 'Predictable noise distribution typical of GAN generators.' }
-            ]
-        });
+        
         setAnalysisState('result');
     };
 
@@ -286,27 +299,40 @@ const VoiceDetection = () => {
 
                                 {/* Result Header */}
                                 <div className="p-10 border-b border-white/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-6">
-                                        <div className="w-24 h-24 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center">
-                                            <div className="text-center">
-                                                <span className="block text-3xl font-black text-red-500">{resultData.score}%</span>
-                                                <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest">Synthetic</span>
+                                    {resultData.error ? (
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-24 h-24 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center">
+                                                <AlertTriangle size={36} className="text-red-500" />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-3xl font-black text-red-500">Analysis Failed</h2>
+                                                <p className="text-sm text-gray-400 mt-2">{resultData.message}</p>
+                                                <p className="text-xs text-gray-500 mt-1">Make sure you manually installed <span className="font-mono">tensorflow librosa soundfile</span></p>
                                             </div>
                                         </div>
-                                        <div>
-                                            <h2 className="text-3xl font-black text-white">{resultData.verdict}</h2>
-                                            <div className="flex gap-4 mt-2">
-                                                <span className="text-xs text-gray-400 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-                                                    <Shield size={12} className="text-[#5C45FD]" />
-                                                    {resultData.type}
-                                                </span>
-                                                <span className="text-xs text-gray-400 flex items-center gap-1.5 uppercase font-bold tracking-wider">
-                                                    <Activity size={12} className="text-[#5C45FD]" />
-                                                    CONFIDENCE: {resultData.confidence}
-                                                </span>
+                                    ) : (
+                                        <div className="flex items-center gap-6">
+                                            <div className={`w-24 h-24 border rounded-full flex items-center justify-center ${resultData.prediction === 1 ? 'bg-red-500/10 border-red-500/30' : 'bg-green-500/10 border-green-500/30'}`}>
+                                                <div className="text-center">
+                                                    <span className={`block text-3xl font-black ${resultData.prediction === 1 ? 'text-red-500' : 'text-green-500'}`}>{resultData.score}%</span>
+                                                    <span className={`text-[9px] font-bold uppercase tracking-widest ${resultData.prediction === 1 ? 'text-red-400' : 'text-green-400'}`}>Confidence</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h2 className="text-3xl font-black text-white">{resultData.verdict}</h2>
+                                                <div className="flex gap-4 mt-2">
+                                                    <span className="text-xs text-gray-400 flex items-center gap-1.5 uppercase font-bold tracking-wider">
+                                                        <Shield size={12} className="text-[#5C45FD]" />
+                                                        {resultData.type}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400 flex items-center gap-1.5 uppercase font-bold tracking-wider">
+                                                        <Activity size={12} className="text-[#5C45FD]" />
+                                                        PROBABILITY: {resultData.metadata?.probability_raw ?? '-'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => {
@@ -332,59 +358,59 @@ const VoiceDetection = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex-1 p-10 grid md:grid-cols-2 gap-10 overflow-y-auto">
-
-                                    {/* Anomalies List */}
-                                    <div className="space-y-6">
-                                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#5C45FD] flex items-center gap-2">
-                                            <BarChart size={16} />
-                                            Acoustic Anomalies
-                                        </h4>
-                                        <div className="space-y-4">
-                                            {resultData.anomalies.map((a, i) => (
-                                                <motion.div
-                                                    key={i}
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: i * 0.1 }}
-                                                    className="bg-[#1F1F1F] p-5 rounded-2xl border border-white/5 hover:border-red-500/30 transition-all group"
-                                                >
-                                                    <p className="font-bold text-red-400 text-sm mb-1 uppercase tracking-tight group-hover:text-red-500 transition-colors">{a.title}</p>
-                                                    <p className="text-xs text-gray-400 leading-relaxed">{a.desc}</p>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Spectral Signature (Mock data) */}
-                                    <div className="space-y-6">
-                                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#5C45FD] flex items-center gap-2">
-                                            <Activity size={16} />
-                                            Spectral Blueprint
-                                        </h4>
-                                        <div className="bg-[#1F1F1F] p-8 rounded-3xl border border-white/5 space-y-8">
-                                            {/* Frequency Distribution simulation */}
-                                            <div className="h-40 flex items-end justify-between gap-1">
-                                                {visualizerData.slice(0, 20).map((v, i) => (
-                                                    <div
+                                {!resultData.error && (
+                                    <div className="flex-1 p-10 grid md:grid-cols-2 gap-10 overflow-y-auto">
+                                        {/* Anomalies List */}
+                                        <div className="space-y-6">
+                                            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#5C45FD] flex items-center gap-2">
+                                                <BarChart size={16} />
+                                                Acoustic Features
+                                            </h4>
+                                            <div className="space-y-4">
+                                                {resultData.anomalies?.map((a, i) => (
+                                                    <motion.div
                                                         key={i}
-                                                        className="flex-1 rounded-t-sm transition-all duration-500"
-                                                        style={{ height: `${v}%`, backgroundColor: i > 12 ? '#ef4444' : '#5C45FD' }}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                {Object.entries(resultData.metadata).map(([k, v]) => (
-                                                    <div key={k} className="bg-[#161616] p-3 rounded-xl border border-white/5">
-                                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest leading-none mb-1.5">{k.replace(/([A-Z])/g, ' $1')}</p>
-                                                        <p className="text-xs font-bold text-white tracking-tight">{v}</p>
-                                                    </div>
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: i * 0.1 }}
+                                                        className={`bg-[#1F1F1F] p-5 rounded-2xl border border-white/5 transition-all group ${resultData.prediction === 1 ? 'hover:border-red-500/30' : 'hover:border-green-500/30'}`}
+                                                    >
+                                                        <p className={`font-bold text-sm mb-1 uppercase tracking-tight transition-colors ${resultData.prediction === 1 ? 'text-red-400 group-hover:text-red-500' : 'text-green-400 group-hover:text-green-500'}`}>{a.title}</p>
+                                                        <p className="text-xs text-gray-400 leading-relaxed">{a.desc}</p>
+                                                    </motion.div>
                                                 ))}
                                             </div>
                                         </div>
-                                    </div>
 
-                                </div>
+                                        {/* Spectral Signature (Mock data) */}
+                                        <div className="space-y-6">
+                                            <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#5C45FD] flex items-center gap-2">
+                                                <Activity size={16} />
+                                                Spectral Blueprint
+                                            </h4>
+                                            <div className="bg-[#1F1F1F] p-8 rounded-3xl border border-white/5 space-y-8">
+                                                {/* Frequency Distribution simulation */}
+                                                <div className="h-40 flex items-end justify-between gap-1">
+                                                    {visualizerData.slice(0, 20).map((v, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="flex-1 rounded-t-sm transition-all duration-500"
+                                                            style={{ height: `${v}%`, backgroundColor: i > 12 ? (resultData.prediction === 1 ? '#ef4444' : '#5C45FD') : '#5C45FD' }}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    {Object.entries(resultData.metadata || {}).map(([k, v]) => (
+                                                        <div key={k} className="bg-[#161616] p-3 rounded-xl border border-white/5">
+                                                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest leading-none mb-1.5">{k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}</p>
+                                                            <p className="text-xs font-bold text-white tracking-tight">{v}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Bottom Action bar */}
                                 <div className="px-10 py-6 bg-[#1F1F1F] border-t border-white/5 flex items-center justify-between">
