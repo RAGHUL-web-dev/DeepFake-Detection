@@ -6,6 +6,7 @@ import { Upload, Link as LinkIcon, Search, AlertTriangle, CheckCircle, Smartphon
 import ImageComparisonSlider from '../../solutions/solutionPreview/ImageComparisonSlider';
 import CNNVisualization from './CNNVisualization';
 import DetectionNav from '../DetectionNav';
+import { useUploadMedia } from '@/hooks/uploadHooks';
 // Reuse if possible, or build similar
 
 const ImageDetection = () => {
@@ -14,6 +15,8 @@ const ImageDetection = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [analysisState, setAnalysisState] = useState('idle'); // idle, scanning, analyzing, result
     const [resultData, setResultData] = useState(null);
+
+    const { mutateAsync: uploadMedia } = useUploadMedia();
 
     // Mock data for "found images" from a URL
     const [foundImages, setFoundImages] = useState([]);
@@ -66,29 +69,27 @@ const ImageDetection = () => {
         setAnalysisState('analyzing');
 
         try {
-            const formData = new FormData();
-            if (selectedFile) {
-                formData.append("file", selectedFile);
-            } else if (foundImages.length > 0) {
+            let fileToUpload = selectedFile;
+            
+            if (!fileToUpload && foundImages.length > 0) {
                 const response = await fetch(foundImages[0]);
                 const blob = await response.blob();
-                formData.append("file", blob, "image.jpg");
+                fileToUpload = new File([blob], "image.jpg", { type: blob.type || 'image/jpeg' });
             }
 
-            const res = await fetch("http://localhost:8000/predict/image", {
-                method: "POST",
-                body: formData
-            });
+            if (!fileToUpload) {
+                throw new Error("No file selected for analysis");
+            }
 
-            const data = await res.json();
+            const data = await uploadMedia({ file: fileToUpload });
 
-            if (!res.ok) {
+            if (!data.success || !data.analysis) {
                 setResultData({
                     error: true,
-                    message: data.detail || 'API failed'
+                    message: data.message || 'Analysis failed or unavailable'
                 });
             } else {
-                setResultData(data);
+                setResultData(data.analysis);
             }
         } catch (err) {
             setResultData({

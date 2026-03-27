@@ -9,15 +9,13 @@ import {
   History,
   MessageSquare,
   LogOut,
-  Menu as MenuIcon,
   Bell,
   User,
-  ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { useLogoutUser } from '@/hooks/authHooks';
+import { useLogoutUser, useCurrentUser } from '@/hooks/authHooks';
 
 const { Header, Sider, Content } = Layout;
 
@@ -28,13 +26,34 @@ export default function DashboardLayout({ children }) {
   const { user, isAuthenticated } = useAuthStore();
   const { mutate: logoutUser } = useLogoutUser();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/auth/login');
-    }
-  }, [isAuthenticated, router]);
+  // Rehydrate session from cookie on mount
+  const { isError } = useCurrentUser();
 
-  if (!isAuthenticated) {
+  // Page title from pathname
+  const getPageTitle = () => {
+    const titles = {
+      '/dashboard': 'Dashboard',
+      '/dashboard/results': 'Results',
+      '/dashboard/knowledge-hub': 'Knowledge Hub',
+      '/dashboard/provenance': 'Provenance History',
+      '/dashboard/feedback': 'Feedback / Report',
+    };
+    return titles[pathname] || 'Dashboard';
+  };
+
+  useEffect(() => {
+    // If session expired or unauthenticated, redirect to login
+    if (isError || (!isAuthenticated)) {
+      router.replace('/auth/login');
+      return;
+    }
+    // Admins should use the admin dashboard
+    if (isAuthenticated && user?.role === 'admin') {
+      router.replace('/admin');
+    }
+  }, [isError, isAuthenticated, user, router]);
+
+  if (!isAuthenticated || user?.role === 'admin') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-[#5C45FD] border-t-transparent rounded-full animate-spin" />
@@ -76,29 +95,29 @@ export default function DashboardLayout({ children }) {
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#F9FAFB' }}>
-      {/* Sidebar */}
+      {/* Sidebar - Black Background */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         width={280}
         style={{
-          background: '#FFFFFF',
-          borderRight: '1px solid #E5E7EB',
+          background: '#000000',
+          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
           position: 'fixed',
           height: '100vh',
           left: 0,
           top: 0,
           zIndex: 100,
-          boxShadow: '4px 0 10px rgba(0, 0, 0, 0.02)'
+          boxShadow: '4px 0 10px rgba(0, 0, 0, 0.2)'
         }}
       >
         <div className="flex items-center px-6 py-8">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5C45FD] to-[#8E78FF] flex items-center justify-center shrink-0">
+          {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5C45FD] to-[#8E78FF] flex items-center justify-center shrink-0">
             <div className="w-4 h-4 rounded-sm border-2 border-white" />
-          </div>
+          </div> */}
           {!collapsed && (
-            <Link href="/" className="ml-3 text-xl font-bold text-gray-900 tracking-tight">
+            <Link href="/" className="mt-6 ml-10 text-2xl font-bold text-white tracking-tight">
               DeepShield
             </Link>
           )}
@@ -113,7 +132,7 @@ export default function DashboardLayout({ children }) {
               background: 'transparent',
               borderRight: 'none',
             }}
-            className="dashboard-menu"
+            className="dashboard-menu-dark"
           />
 
           <div className="mt-auto px-1 pb-4">
@@ -121,7 +140,7 @@ export default function DashboardLayout({ children }) {
               type="text"
               icon={<LogOut size={20} />}
               onClick={handleLogout}
-              className="w-full h-12 flex items-center text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+              className="w-full h-12 flex items-center text-gray-300 hover:text-white hover:bg-white/10 rounded-xl transition-all"
             >
               {!collapsed && <span className="ml-3 font-medium">Logout</span>}
             </Button>
@@ -151,7 +170,7 @@ export default function DashboardLayout({ children }) {
         }}>
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-semibold text-gray-900">
-              {menuItems.find(item => item.key === pathname)?.props?.label || 'Overview'}
+              {getPageTitle()}
             </h1>
           </div>
 
@@ -166,27 +185,29 @@ export default function DashboardLayout({ children }) {
 
             <div className="h-6 w-[1px] bg-gray-200" />
 
-            <Space size={12} className="cursor-pointer">
-              <Avatar
-                icon={<User size={18} />}
-                src={user?.avatar}
-                style={{ 
-                  background: '#F3F4F6', 
-                  border: '1px solid #E5E7EB',
-                  color: '#4B5563'
-                }}
-              />
-              {!collapsed && (
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900 leading-none">
-                    {user?.name || 'User'}
-                  </span>
-                  <span className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">
-                    Pro Member
-                  </span>
-                </div>
-              )}
-            </Space>
+            <Link href="/dashboard/profile">
+              <Space size={12} className="cursor-pointer hover:opacity-80 transition-opacity">
+                <Avatar
+                  icon={<User size={18} />}
+                  src={user?.avatar}
+                  style={{ 
+                    background: '#F3F4F6', 
+                    border: '1px solid #E5E7EB',
+                    color: '#4B5563'
+                  }}
+                />
+                {!collapsed && (
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900 leading-none">
+                      {user?.name || 'User'}
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-medium">
+                      Pro Member
+                    </span>
+                  </div>
+                )}
+              </Space>
+            </Link>
           </div>
         </Header>
 
@@ -198,34 +219,46 @@ export default function DashboardLayout({ children }) {
       </Layout>
 
       <style jsx global>{`
-        .dashboard-menu .ant-menu-item {
+        /* Dark Theme Menu Styles */
+        .dashboard-menu-dark .ant-menu-item {
           height: 50px !important;
           border-radius: 12px !important;
           margin-bottom: 8px !important;
-          color: #6B7280 !important;
+          color: #9CA3AF !important;
           padding-left: 16px !important;
           font-weight: 500 !important;
         }
-        .dashboard-menu .ant-menu-item-selected {
-          background: rgba(92, 69, 253, 0.08) !important;
-          color: #5C45FD !important;
+        .dashboard-menu-dark .ant-menu-item-selected {
+          background: rgba(92, 69, 253, 0.15) !important;
+          color: #FFFFFF !important;
         }
-        .dashboard-menu .ant-menu-item-selected .ant-menu-title-content {
-          color: #5C45FD !important;
+        .dashboard-menu-dark .ant-menu-item-selected .ant-menu-title-content {
+          color: #FFFFFF !important;
           font-weight: 600 !important;
         }
-        .dashboard-menu .ant-menu-item:hover {
-          background: rgba(0, 0, 0, 0.02) !important;
-          color: #5C45FD !important;
+        .dashboard-menu-dark .ant-menu-item:hover {
+          background: rgba(255, 255, 255, 0.08) !important;
+          color: #FFFFFF !important;
         }
-        .dashboard-menu .ant-menu-item .anticon {
+        .dashboard-menu-dark .ant-menu-item .anticon {
+          color: #6B7280 !important;
+        }
+        .dashboard-menu-dark .ant-menu-item-selected .anticon {
+          color: #FFFFFF !important;
+        }
+        .dashboard-menu-dark .ant-menu-item:hover .anticon {
+          color: #FFFFFF !important;
+        }
+        
+        /* Menu link styles */
+        .dashboard-menu-dark .ant-menu-item a {
           color: #9CA3AF !important;
         }
-        .dashboard-menu .ant-menu-item-selected .anticon {
-          color: #5C45FD !important;
+        .dashboard-menu-dark .ant-menu-item-selected a {
+          color: #FFFFFF !important;
         }
-        .dashboard-menu .ant-menu-item:hover .anticon {
-          color: #5C45FD !important;
+        .dashboard-menu-dark .ant-menu-item:hover a {
+          color: #FFFFFF !important;
         }
       `}</style>
     </Layout>

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Type, AlertTriangle, CheckCircle, Search, Shield, X, Loader2, Copy, Zap, Brain, Hash, Clock, Globe } from 'lucide-react';
 import DetectionNav from '../DetectionNav';
 import TextAnalysisVisualization from './TextAnalysisVisualization';
+import { useAnalyzeText } from '@/hooks/uploadHooks';
 
 const TextDetection = () => {
     const [inputText, setInputText] = useState('');
@@ -12,24 +13,20 @@ const TextDetection = () => {
     const [resultData, setResultData] = useState(null);
     const [copied, setCopied] = useState(false);
 
+    const { mutateAsync: analyzeText } = useAnalyzeText();
+
     const startAnalysis = async () => {
         if (!inputText.trim()) return;
 
         setAnalysisState('analyzing');
 
         try {
-            const res = await fetch("http://localhost:8000/predict/text", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: inputText })
-            });
+            const data = await analyzeText(inputText);
 
-            const data = await res.json();
-
-            if (!res.ok) {
+            if (!data.success) {
                 setResultData({
                     error: true,
-                    message: data.detail || 'API failed'
+                    message: data.message || 'API failed'
                 });
             } else {
                 setResultData(data);

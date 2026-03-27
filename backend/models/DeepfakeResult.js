@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const deepfakeResultSchema = new mongoose.Schema(
   {
-    mediaId: { type: mongoose.Schema.Types.ObjectId, ref: "MediaFile" },
+    mediaId: { type: mongoose.Schema.Types.ObjectId, ref: "Media" },
     result: { type: String, enum: ["authentic", "fake", "uncertain"] },
     confidence: Number,
     detectionModel: String,

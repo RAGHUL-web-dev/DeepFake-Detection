@@ -66,12 +66,11 @@ function DeepfakeRealitySection() {
           <div className="relative">
             <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/20">
 
-              {/* Image Placeholder */}
-              <div
-                className="h-[320px] w-full bg-cover bg-center"
-                style={{
-                  backgroundImage: "url('/images/deepfake-reality.jpg')",
-                }}
+              {/* Online Image */}
+              <img
+                src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop"
+                alt="AI generated face deepfake concept"
+                className="h-[320px] w-full object-cover"
               />
 
               {/* Subtle Glitch Overlay */}

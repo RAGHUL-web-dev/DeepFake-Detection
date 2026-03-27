@@ -12,10 +12,11 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { Card, Collapse, Input, Button, Divider } from 'antd';
+import { useRouter } from 'next/navigation';
 
-const { Panel } = Collapse;
 
 export default function KnowledgeHub() {
+    const router = useRouter();
     const categories = [
         {
             title: "What are Deepfakes?",
@@ -67,7 +68,14 @@ export default function KnowledgeHub() {
                         The digital world is evolving fast. At DeepShield, we don't just detect manipulation; we provide the tools and knowledge to understand it.
                     </p>
                     <div className="flex gap-4">
-                        <Button type="primary" size="large" className="bg-[#5C45FD] border-none px-8 rounded-xl h-12">Get Started</Button>
+                        <Button 
+                            type="primary" 
+                            size="large" 
+                            className="bg-[#5C45FD] border-none px-8 rounded-xl h-12"
+                            onClick={() => router.push('/knowledge')}
+                        >
+                            Get Started
+                        </Button>
                         <Button type="text" size="large" className="text-white hover:bg-white/5 px-8 rounded-xl h-12 flex items-center gap-2">
                             Research Papers <ChevronRight size={18} />
                         </Button>
@@ -132,15 +140,17 @@ export default function KnowledgeHub() {
                     ghost
                     expandIcon={({ isActive }) => <ChevronRight size={18} className={`transition-transform text-gray-400 ${isActive ? 'rotate-90' : ''}`} />}
                     className="knowledge-faq"
-                >
-                    {faqs.map((faq, idx) => (
-                        <Panel header={faq.q} key={idx} className="mb-4 bg-[#0F0F10] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all">
+                    items={faqs.map((faq, idx) => ({
+                        key: idx,
+                        label: faq.q,
+                        children: (
                             <div className="text-gray-400 leading-relaxed px-4 pb-4">
                                 {faq.a}
                             </div>
-                        </Panel>
-                    ))}
-                </Collapse>
+                        ),
+                        className: "mb-4 bg-[#0F0F10] border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all"
+                    }))}
+                />
             </div>
 
             <style jsx global>{`

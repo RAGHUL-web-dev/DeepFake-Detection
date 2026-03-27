@@ -9,6 +9,7 @@ import {
     Share2, Volume2, Waveform
 } from 'lucide-react';
 import DetectionNav from '../DetectionNav';
+import { useUploadMedia } from '@/hooks/uploadHooks';
 
 const VoiceDetection = () => {
     const [inputUrl, setInputUrl] = useState('');
@@ -19,6 +20,8 @@ const VoiceDetection = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [audioUrl, setAudioUrl] = useState('');
     const audioRef = useRef(null);
+
+    const { mutateAsync: uploadMedia } = useUploadMedia();
 
     // Update audio URL when file or input changes
     useEffect(() => {
@@ -79,15 +82,7 @@ const VoiceDetection = () => {
         }
 
         try {
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-
-            const res = await fetch('http://localhost:8000/predict/voice', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await res.json();
+            const data = await uploadMedia({ file: selectedFile });
             
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -95,13 +90,13 @@ const VoiceDetection = () => {
                 setIsPlaying(false);
             }
 
-            if (!res.ok) {
+            if (!data.success || !data.analysis) {
                 setResultData({
                     error: true,
-                    message: data.detail || 'API failed'
+                    message: data.message || 'API failed'
                 });
             } else {
-                setResultData(data);
+                setResultData(data.analysis);
             }
         } catch (err) {
             if (audioRef.current) {

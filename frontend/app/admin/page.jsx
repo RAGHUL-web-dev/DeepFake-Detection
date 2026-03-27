@@ -133,7 +133,7 @@ export default function AdminOverview() {
                     <Card 
                         key={idx} 
                         className="bg-white border-gray-200 shadow-sm rounded-xl hover:shadow-md transition-all"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <div className="flex items-start justify-between mb-4">
                             <div className={`p-3 rounded-lg ${stat.bg}`}>
@@ -158,7 +158,7 @@ export default function AdminOverview() {
                     {/* System Health */}
                     <Card 
                         className="bg-white border-gray-200 shadow-sm rounded-xl"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -224,7 +224,7 @@ export default function AdminOverview() {
                     {/* User Activity */}
                     <Card 
                         className="bg-white border-gray-200 shadow-sm rounded-xl"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-6">
                             <Users size={20} className="text-[#5C45FD]" />
@@ -256,7 +256,7 @@ export default function AdminOverview() {
                     {/* Admin Actions */}
                     <Card 
                         className="bg-gradient-to-br from-gray-900 to-gray-800 border-0 shadow-xl rounded-xl"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <ShieldAlert size={32} className="text-white/80 mb-4" />
                         <h3 className="text-white font-semibold text-lg mb-2">Admin Control Center</h3>
@@ -284,7 +284,7 @@ export default function AdminOverview() {
                     {/* Detection Summary */}
                     <Card 
                         className="bg-white border-gray-200 shadow-sm rounded-xl"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <TrendingUp size={18} className="text-[#5C45FD]" />

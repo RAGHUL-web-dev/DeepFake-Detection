@@ -9,6 +9,7 @@ import {
     Share2, Download, BarChart3
 } from 'lucide-react';
 import DetectionNav from '../DetectionNav';
+import { useUploadMedia } from '@/hooks/uploadHooks';
 
 const VideoDetection = () => {
     const [inputUrl, setInputUrl] = useState('');
@@ -18,6 +19,8 @@ const VideoDetection = () => {
     const [resultData, setResultData] = useState(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
+
+    const { mutateAsync: uploadMedia } = useUploadMedia();
 
     const videoRef = useRef(null);
     const [scanFrame, setScanFrame] = useState(0);
@@ -66,22 +69,14 @@ const VideoDetection = () => {
         }, 50);
 
         try {
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-
-            const res = await fetch('http://localhost:8000/predict/video', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await res.json();
+            const data = await uploadMedia({ file: selectedFile });
             clearInterval(interval);
             setScanFrame(100);
 
-            if (!res.ok) {
-                setResultData({ error: true, message: data.detail || 'API Error' });
+            if (!data.success || !data.analysis) {
+                setResultData({ error: true, message: data.message || 'API Error' });
             } else {
-                setResultData(data);
+                setResultData(data.analysis);
             }
         } catch (err) {
             clearInterval(interval);

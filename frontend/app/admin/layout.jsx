@@ -213,23 +213,25 @@ function AdminHeader() {
                 </div>
 
                 {/* Admin Profile */}
-                <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#5C45FD] to-[#8E78FF] text-white flex items-center justify-center text-sm font-semibold">
-                            {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                <Link href="/admin/profile">
+                    <div className="flex items-center gap-3 pl-2 border-l border-gray-200 cursor-pointer hover:opacity-80 transition-opacity">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#5C45FD] to-[#8E78FF] text-white flex items-center justify-center text-sm font-semibold">
+                                {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                            </div>
+                            <div className="hidden md:block">
+                                <p className="text-sm font-medium text-gray-900 leading-none">
+                                    {user?.name || 'Administrator'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Root Access
+                                </p>
+                            </div>
                         </div>
-                        <div className="hidden md:block">
-                            <p className="text-sm font-medium text-gray-900 leading-none">
-                                {user?.name || 'Administrator'}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                Root Access
-                            </p>
-                        </div>
+                        <ChevronDown size={16} className="text-gray-400 hidden md:block" />
                     </div>
-                    <ChevronDown size={16} className="text-gray-400 hidden md:block" />
-                </div>
+                </Link>
             </div>
         </header>
     );

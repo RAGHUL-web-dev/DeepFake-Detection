@@ -143,7 +143,7 @@ export default function DashboardPage() {
                         showInfo={false}
                         size="small"
                         strokeColor={score > 70 ? '#10B981' : '#EF4444'}
-                        trailColor="#E5E7EB"
+                        railColor="#E5E7EB"
                     />
                     <span className="text-xs font-medium text-gray-700">{score.toFixed(1)}%</span>
                 </div>
@@ -193,7 +193,7 @@ export default function DashboardPage() {
                     <Card 
                         key={i} 
                         className="bg-white border-gray-200 shadow-sm rounded-xl hover:shadow-md transition-all"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <div className="flex items-start justify-between">
                             <div className={`w-12 h-12 rounded-lg ${stat.bg} flex items-center justify-center`}>
@@ -224,7 +224,7 @@ export default function DashboardPage() {
                 <div className="lg:col-span-2">
                     <Card 
                         className="bg-white border-gray-200 shadow-sm rounded-xl overflow-hidden"
-                        bodyStyle={{ padding: 0 }}
+                        styles={{ body: { padding: 0 } }}
                     >
                         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
                             <div>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     {/* Quick Actions */}
                     <Card 
                         className="bg-white border-gray-200 shadow-sm rounded-xl"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <h2 className="text-lg font-semibold text-gray-900 mb-5">Quick Actions</h2>
                         <div className="space-y-3">
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                     {/* Insights Card */}
                     <Card 
                         className="bg-gradient-to-br from-[#5C45FD] to-[#7C66FF] border-0 shadow-lg"
-                        bodyStyle={{ padding: '24px' }}
+                        styles={{ body: { padding: '24px' } }}
                     >
                         <Target className="text-white/80 mb-4" size={32} />
                         <h3 className="text-white font-semibold text-lg mb-1">Detection Insights</h3>

@@ -2,37 +2,43 @@
 
 import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 
 const SERVICES = [
     {
         title: 'Identity Protection',
         description: 'Ensure your digital persona remains yours. Our AI scans for real-time face variations and deepfake injections in video calls and live streams.',
-        image: 'C:/Users/SURENDHAR/.gemini/antigravity/brain/82f85fac-20d8-47cd-be2d-ef4c0ab5a6e4/face_swap_detection_feature_1770147148277.png',
+        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=800&fit=crop', // Face recognition/identity protection
         color: 'from-blue-600/20 to-cyan-500/20',
+        href: '/solutions/identity-protection',
     },
     {
         title: 'Voice Authentication',
         description: 'Protect against voice cloning heists. We analyze frequency patterns and synthetic artifacts to distinguish between human and AI-generated speech.',
-        image: 'C:/Users/SURENDHAR/.gemini/antigravity/brain/82f85fac-20d8-47cd-be2d-ef4c0ab5a6e4/voice_detection_feature_1770147168062.png',
+        image: 'https://images.unsplash.com/photo-1584251003710-1a6de04ae28f?w=800&h=800&fit=crop', // Voice/microphone
         color: 'from-purple-600/20 to-pink-500/20',
+        href: '/solutions/voice-authentication',
     },
     {
         title: 'Document Integrity',
         description: 'Validate digital credentials with blockchain-backed certainty. Our system detects pixel-level edits in IDs, passports, and legal documents.',
-        image: 'C:/Users/SURENDHAR/.gemini/antigravity/brain/82f85fac-20d8-47cd-be2d-ef4c0ab5a6e4/document_integrity_feature_1770147187022.png',
+        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=800&fit=crop', // Documents/passport
         color: 'from-emerald-600/20 to-teal-500/20',
+        href: '/solutions/document-integrity',
     },
     {
         title: 'Social Media Guard',
         description: 'Stay ahead of misinformation. We monitor social platforms for deepfake campaign patterns, helping brands and individuals protect their reputation.',
-        image: 'C:/Users/SURENDHAR/.gemini/antigravity/brain/82f85fac-20d8-47cd-be2d-ef4c0ab5a6e4/social_media_security_feature_1770147207764.png',
+        image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&h=800&fit=crop', // Social media/security
         color: 'from-orange-600/20 to-red-500/20',
+        href: '/solutions/social-media-guard',
     },
     {
         title: 'Forensic Analysis',
         description: 'Deep-dive investigation for legal and commercial needs. Detailed reports on light source consistency, shadow analysis, and metadata verification.',
-        image: 'C:/Users/SURENDHAR/.gemini/antigravity/brain/82f85fac-20d8-47cd-be2d-ef4c0ab5a6e4/forensic_pixel_analysis_feature_1770147233890.png',
+        image: 'https://images.unsplash.com/photo-1581091226033-d5c48150dbaa?w=800&h=800&fit=crop', // Forensic analysis/magnifying glass
         color: 'from-indigo-600/20 to-blue-500/20',
+        href: '/solutions/forensic-analysis',
     },
 ];
 
@@ -99,10 +105,12 @@ function Card({ service, index }) {
                         transition={{ delay: 1.5 }}
                         className="mt-10"
                     >
-                        <button className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-white/5 px-8 py-4 font-bold text-white border border-white/10 transition-all hover:bg-white/10">
-                            <span className="relative z-10 text-xl">Learn More</span>
-                            <div className="absolute inset-x-0 bottom-0 h-1 bg-[var(--color-primary-light)] transition-transform scale-x-0 group-hover:scale-x-100" />
-                        </button>
+                        <Link href={service.href}>
+                            <button className="group relative flex items-center gap-3 overflow-hidden rounded-full bg-white/5 px-8 py-4 font-bold text-white border border-white/10 transition-all hover:bg-white/10">
+                                <span className="relative z-10 text-xl">Learn More</span>
+                                <div className="absolute inset-x-0 bottom-0 h-1 bg-[var(--color-primary-light)] transition-transform scale-x-0 group-hover:scale-x-100" />
+                            </button>
+                        </Link>
                     </motion.div>
                 </div>
 
@@ -114,12 +122,16 @@ function Card({ service, index }) {
                         transition={{ duration: 1, delay: 0.2 }}
                         className="group relative aspect-square overflow-hidden rounded-2xl border-4 border-white/5 shadow-2xl"
                     >
-                        {/* Image Placeholder with path to generated asset */}
+                        {/* Image Overlay */}
                         <div className="absolute inset-0 bg-black/40 mix-blend-overlay transition-opacity group-hover:opacity-20" />
                         <img
                             src={service.image}
                             alt={service.title}
                             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            onError={(e) => {
+                                // Fallback image if online image fails to load
+                                e.target.src = 'https://via.placeholder.com/800x800/1a1a2e/5C45FD?text=DeepShield';
+                            }}
                         />
                         {/* Decorative Corner */}
                         <div className="absolute top-0 left-0 h-12 w-12 border-t-2 border-l-2 border-[var(--color-primary-light)]/50" />

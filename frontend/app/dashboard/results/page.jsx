@@ -12,9 +12,12 @@ import {
     Music,
     AlertTriangle,
     ShieldCheck,
-    HelpCircle
+    HelpCircle,
+    TrendingUp
 } from 'lucide-react';
 import { Card, Table, Input, Button, Tag, Space, Select, DatePicker, Modal, Tooltip } from 'antd';
+
+import { useUserMedia } from '@/hooks/authHooks';
 
 const { RangePicker } = DatePicker;
 
@@ -22,62 +25,38 @@ export default function ResultsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [detailVisible, setDetailVisible] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [filterType, setFilterType] = useState('All');
+    const [filterVerdict, setFilterVerdict] = useState('All');
 
-    const data = [
-        {
-            key: '1',
-            media: 'Election_Speech_Clip.mp4',
-            type: 'Video',
-            verdict: 'Fake',
-            confidence: 94.2,
-            date: '2024-02-27',
-            status: 'Completed'
-        },
-        {
-            key: '2',
-            media: 'Passport_Scan_Check.pdf',
-            type: 'Document',
-            verdict: 'Authentic',
-            confidence: 99.1,
-            date: '2024-02-27',
-            status: 'Completed'
-        },
-        {
-            key: '3',
-            media: 'Profile_Picture_Headshot.png',
-            type: 'Image',
-            verdict: 'Uncertain',
-            confidence: 52.4,
-            date: '2024-02-26',
-            status: 'Completed'
-        },
-        {
-            key: '4',
-            media: 'Phone_Call_Recording.mp3',
-            type: 'Audio',
-            verdict: 'Fake',
-            confidence: 88.7,
-            date: '2024-02-25',
-            status: 'Completed'
-        }
-    ];
+    const { data: mediaData, isLoading } = useUserMedia();
+
+    const rawData = mediaData?.success ? mediaData.media : [];
+
+    const filteredData = rawData
+        .filter(item => {
+            const matchesSearch = item.fileName?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesType = filterType === 'All' || item.fileType === filterType;
+            const matchesVerdict = filterVerdict === 'All' || item.verdict === filterVerdict;
+            return matchesSearch && matchesType && matchesVerdict;
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const columns = [
         {
             title: 'Media File',
-            dataIndex: 'media',
-            key: 'media',
+            dataIndex: 'fileName',
+            key: 'fileName',
             render: (text, record) => (
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                        {record.type === 'Image' && <ImageIcon size={20} className="text-blue-400" />}
-                        {record.type === 'Video' && <Video size={20} className="text-purple-400" />}
-                        {record.type === 'Audio' && <Music size={20} className="text-amber-400" />}
-                        {!['Image', 'Video', 'Audio'].includes(record.type) && <Search size={20} className="text-gray-400" />}
+                        {record.fileType === 'Image' && <ImageIcon size={20} className="text-blue-400" />}
+                        {record.fileType === 'Video' && <Video size={20} className="text-purple-400" />}
+                        {record.fileType === 'Audio' && <Music size={20} className="text-amber-400" />}
+                        {record.fileType === 'Document' && <Search size={20} className="text-gray-400" />}
                     </div>
                     <div>
-                        <div className="text-white font-medium">{text}</div>
-                        <div className="text-xs text-gray-500">{record.type} • 4.2 MB</div>
+                        <div className="text-white font-medium max-w-[200px] truncate">{text}</div>
+                        <div className="text-xs text-gray-500">{record.fileType} • {(record.fileSize / 1024 / 1024).toFixed(2)} MB</div>
                     </div>
                 </div>
             )
@@ -88,30 +67,32 @@ export default function ResultsPage() {
             key: 'verdict',
             render: (verdict) => {
                 const styles = {
-                    'Authentic': { color: 'success', icon: <ShieldCheck size={14} className="mr-1" /> },
-                    'Fake': { color: 'error', icon: <AlertTriangle size={14} className="mr-1" /> },
-                    'Uncertain': { color: 'warning', icon: <HelpCircle size={14} className="mr-1" /> }
+                    'Authentic': { color: 'success', icon: <ShieldCheck size={14} className="mr-1" />, label: 'Authentic' },
+                    'Real': { color: 'success', icon: <ShieldCheck size={14} className="mr-1" />, label: 'Real' },
+                    'Fake': { color: 'error', icon: <AlertTriangle size={14} className="mr-1" />, label: 'Fake' },
+                    'Uncertain': { color: 'warning', icon: <HelpCircle size={14} className="mr-1" />, label: 'Uncertain' },
+                    'Processing': { color: 'processing', icon: <TrendingUp size={14} className="mr-1" />, label: 'Processing' }
                 };
-                const config = styles[verdict];
+                const config = styles[verdict] || { color: 'default', icon: null, label: verdict };
                 return (
                     <Tag variant="filled" color={config.color} className="flex items-center w-fit rounded-full px-3">
                         {config.icon}
-                        {verdict}
+                        {config.label}
                     </Tag>
                 );
             }
         },
         {
             title: 'Confidence',
-            dataIndex: 'confidence',
-            key: 'confidence',
+            dataIndex: 'confidenceScore',
+            key: 'confidenceScore',
             render: (score) => (
                 <div className="flex items-center gap-3">
-                    <span className={`text-sm font-mono ${score > 80 ? 'text-[#5C45FD]' : 'text-gray-400'}`}>{score}%</span>
+                    <span className={`text-sm font-mono ${score > 80 ? 'text-[#5C45FD]' : 'text-gray-400'}`}>{score ? score.toFixed(1) : 0}%</span>
                     <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden hidden md:block">
                         <div
                             className={`h-full rounded-full ${score > 80 ? 'bg-[#5C45FD]' : score > 50 ? 'bg-amber-500' : 'bg-red-500'}`}
-                            style={{ width: `${score}%` }}
+                            style={{ width: `${score || 0}%` }}
                         />
                     </div>
                 </div>
@@ -119,9 +100,9 @@ export default function ResultsPage() {
         },
         {
             title: 'Date',
-            dataIndex: 'date',
-            key: 'date',
-            render: (date) => <span className="text-gray-500">{date}</span>
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            render: (date) => <span className="text-gray-500">{new Date(date).toLocaleDateString()}</span>
         },
         {
             title: 'Actions',
@@ -161,23 +142,29 @@ export default function ResultsPage() {
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                         />
-                        <Button
-                            icon={<Filter size={18} />}
-                            className="h-11 bg-white/5 border-white/10 text-white rounded-xl flex items-center gap-2"
-                        >
-                            Filters
-                        </Button>
-                    </div>
-                    <div className="flex gap-4 w-full lg:w-auto">
-                        <RangePicker
-                            className="bg-white/5 border-white/10 text-white h-11 rounded-xl"
+                        <Select 
+                            defaultValue="All" 
+                            className="h-11 w-32 results-select"
+                            onChange={setFilterType}
+                            options={[
+                                { value: 'All', label: 'All Types' },
+                                { value: 'Image', label: 'Image' },
+                                { value: 'Video', label: 'Video' },
+                                { value: 'Audio', label: 'Audio' },
+                                { value: 'Document', label: 'Text' },
+                            ]}
                         />
-                        <Button
-                            type="primary"
-                            className="h-11 bg-[#5C45FD] hover:bg-[#4A38CC] border-none rounded-xl font-medium px-6"
-                        >
-                            Export data
-                        </Button>
+                        <Select 
+                            defaultValue="All" 
+                            className="h-11 w-32 results-select"
+                            onChange={setFilterVerdict}
+                            options={[
+                                { value: 'All', label: 'All Results' },
+                                { value: 'Real', label: 'Real' },
+                                { value: 'Fake', label: 'Fake' },
+                                { value: 'Processing', label: 'Processing' },
+                            ]}
+                        />
                     </div>
                 </div>
             </Card>
@@ -185,12 +172,14 @@ export default function ResultsPage() {
             {/* Results Table */}
             <Card className="mt-5 bg-[#0F0F10] border-white/5 overflow-hidden">
                 <Table
-                    dataSource={data.filter(item => item.media.toLowerCase().includes(searchTerm.toLowerCase()))}
+                    loading={isLoading}
+                    dataSource={filteredData}
                     columns={columns}
                     pagination={{
                         pageSize: 10,
                         className: 'results-pagination'
                     }}
+                    rowKey="_id"
                     className="results-table"
                 />
             </Card>
@@ -213,46 +202,59 @@ export default function ResultsPage() {
                     <div className="overflow-hidden rounded-2xl">
                         <div className="p-8 border-bottom border-white/5">
                             <div className="flex justify-between items-start mb-6">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-white mb-2">{selectedItem.media}</h3>
-                                    <span className="text-gray-500">Resource ID: DB-9283-X12</span>
+                                <div className="max-w-[70%]">
+                                    <h3 className="text-2xl font-bold text-white mb-2 break-all">{selectedItem.fileName}</h3>
+                                    <span className="text-gray-500 font-mono text-xs">Resource ID: {selectedItem._id}</span>
                                 </div>
-                                <Tag  color={selectedItem.verdict === 'Authentic' ? 'success' : 'error'} className="text-lg px-4 py-1 rounded-full">
+                                <Tag color={['Real', 'Authentic'].includes(selectedItem.verdict) ? 'success' : selectedItem.verdict === 'Fake' ? 'error' : 'warning'} className="text-lg px-4 py-1 rounded-full">
                                     {selectedItem.verdict.toUpperCase()}
                                 </Tag>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
-                                <div className="aspect-video rounded-xl bg-white/5 border border-white/10 flex items-center justify-center relative group">
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <Button icon={<Eye size={20} />} className="hidden group-hover:flex items-center gap-2 absolute z-10 bg-white/10 text-white border-white/20">Preview Media</Button>
-                                    <span className="text-gray-600 font-mono text-xs">NO PREVIEW AVAILABLE</span>
+                                <div className="aspect-video rounded-xl bg-white/5 border border-white/10 flex items-center justify-center relative group overflow-hidden">
+                                    {selectedItem.fileType === 'Image' ? (
+                                        <img src={`http://localhost:5000${selectedItem.url}`} alt="Preview" className="w-full h-full object-contain" />
+                                    ) : selectedItem.fileType === 'Video' ? (
+                                        <video src={`http://localhost:5000${selectedItem.url}`} className="w-full h-full object-contain" controls />
+                                    ) : (
+                                        <>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <span className="text-gray-600 font-mono text-xs uppercase">{selectedItem.fileType} Preview unavailable</span>
+                                        </>
+                                    )}
                                 </div>
 
                                 <div className="space-y-6">
                                     <div>
                                         <div className="flex justify-between text-sm mb-2">
                                             <span className="text-gray-400">Analysis Confidence</span>
-                                            <span className="text-white font-bold">{selectedItem.confidence}%</span>
+                                            <span className="text-white font-bold">{selectedItem.confidenceScore?.toFixed(1) || 0}%</span>
                                         </div>
-                                        <Progress percent={selectedItem.confidence} showInfo={false} strokeColor="#5C45FD" railColor="rgba(255,255,255,0.05)" />
+                                        <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                                            <div 
+                                                className={`h-full rounded-full ${selectedItem.confidenceScore > 80 ? 'bg-[#5C45FD]' : 'bg-amber-500'}`}
+                                                style={{ width: `${selectedItem.confidenceScore || 0}%` }}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                                         <h4 className="text-white font-medium mb-3 text-sm">System Findings</h4>
                                         <ul className="space-y-2 text-sm text-gray-400">
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#5C45FD]" />
-                                                Spatial inconsistency detected in facial metadata.
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#5C45FD]" />
-                                                Compression artifacts indicative of generative manipulation.
-                                            </li>
-                                            <li className="flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-[#5C45FD]" />
-                                                Metadata mismatch with source camera profiles.
-                                            </li>
+                                            {selectedItem.findings?.length > 0 ? (
+                                                selectedItem.findings.map((finding, i) => (
+                                                    <li key={i} className="flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-[#5C45FD]" />
+                                                        {finding}
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <li className="flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#5C45FD]" />
+                                                    No specific anomalies flagged in this scan.
+                                                </li>
+                                            )}
                                         </ul>
                                     </div>
                                 </div>
@@ -295,6 +297,15 @@ export default function ResultsPage() {
                 .results-pagination .ant-pagination-item-active { border-color: #5C45FD !important; }
                 .results-pagination .ant-pagination-item-active a { color: #5C45FD !important; }
                 .ant-modal-close { color: #4B5563 !important; top: 20px; right: 20px; }
+                
+                .results-select .ant-select-selector {
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                    border-radius: 12px !important;
+                    color: white !important;
+                }
+                .results-select .ant-select-arrow { color: #9CA3AF !important; }
+                .results-select.ant-select-focused .ant-select-selector { border-color: #5C45FD !important; }
             `}</style>
         </div>
     );

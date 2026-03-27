@@ -7,16 +7,19 @@ const ErrorHandler = require("../utils/errorHandler");
 exports.getAdminStats = catchAsyncError(async (req, res, next) => {
     const totalUsers = await User.countDocuments();
     const activeUsers = await User.countDocuments({ status: "active" });
+    const inactiveUsers = await User.countDocuments({ status: "inactive" });
     const totalAdmins = await User.countDocuments({ role: "admin" });
     
     // Note: If Media isn't fully implemented locally, default to 0 to prevent crashes
     let totalMedia = 0;
     let fakeMedia = 0;
     let authenticMedia = 0;
+    let processingMedia = 0;
     try {
-        totalMedia = await Media.countDocuments();
+        totalMedia = await Media.countDocuments({ status: { $ne: "deleted" } });
         fakeMedia = await Media.countDocuments({ verdict: "Fake" });
         authenticMedia = await Media.countDocuments({ verdict: "Authentic" });
+        processingMedia = await Media.countDocuments({ verdict: "Processing" });
     } catch (e) {
         // Media collection might not exist yet if it's new
     }
@@ -27,12 +30,14 @@ exports.getAdminStats = catchAsyncError(async (req, res, next) => {
             users: {
                 total: totalUsers,
                 active: activeUsers,
+                inactive: inactiveUsers,
                 admins: totalAdmins
             },
             media: {
                 total: totalMedia,
                 fake: fakeMedia,
-                authentic: authenticMedia
+                authentic: authenticMedia,
+                processing: processingMedia
             }
         }
     });

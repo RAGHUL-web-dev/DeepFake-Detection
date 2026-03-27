@@ -167,18 +167,46 @@ export default function ProvenancePage() {
                     </Card>
                 </div>
             </div>
+            {/* Coming Soon Section */}
+            <div className="pt-12">
+                <div className="flex items-center gap-4 mb-8">
+                    <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest">Future Roadmap</h2>
+                    <div className="h-px flex-1 bg-white/5" />
+                    <Badge count="Coming Soon" style={{ backgroundColor: '#52c41a' }} />
+                </div>
 
-            <style jsx global>{`
-                .provenance-timeline .ant-timeline-item-label {
-                    color: #4B5563 !important;
-                }
-                .provenance-timeline .ant-timeline-item-tail {
-                    border-left: 2px dashed rgba(92, 69, 253, 0.2) !important;
-                }
-                .provenance-timeline .ant-timeline-item-content {
-                    margin-left: 24px !important;
-                }
-            `}</style>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <Card className="bg-[#0F0F10] border-white/5 rounded-3xl p-8 relative overflow-hidden group hover:border-[#5C45FD]/30 transition-all">
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#5C45FD]/10 rounded-full blur-3xl group-hover:bg-[#5C45FD]/20 transition-all" />
+                        <div className="flex items-start gap-6 relative z-10">
+                            <div className="p-4 rounded-2xl bg-[#5C45FD]/10 text-[#5C45FD]">
+                                <LinkIcon size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-3">Enterprise Blockchain Integration</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">
+                                    We are developing deep integration with enterprise-grade blockchains to provide cross-platform media traceability. This will allow for an immutable, globally verifiable record of every edit and analysis a piece of media undergoes.
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card className="bg-[#0F0F10] border-white/5 rounded-3xl p-8 relative overflow-hidden group hover:border-cyan-500/30 transition-all">
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-all" />
+                        <div className="flex items-start gap-6 relative z-10">
+                            <div className="p-4 rounded-2xl bg-cyan-500/10 text-cyan-500">
+                                <Share2 size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-3">DeepShield Browser Extension</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">
+                                    Analyze content as you browse. Our upcoming Google Chrome extension will allow you to verify images and videos on any website in real-time, bringing forensic-grade detection directly to your social media feeds and news outlets.
+                                </p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
         </div>
     );
 }

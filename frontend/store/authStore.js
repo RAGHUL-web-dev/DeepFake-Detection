@@ -8,7 +8,7 @@ export const useAuthStore = create(
             token: null,
             isAuthenticated: false,
 
-            // Call this from login mutation onSuccess
+            // Call this from login/register mutation onSuccess
             setAuth: (user, token) => set({
                 user,
                 token,
@@ -18,12 +18,7 @@ export const useAuthStore = create(
             // Call this to update user from /me endpoint
             setUser: (user) => set({ user, isAuthenticated: !!user }),
 
-            logout: () => {
-                set({ user: null, token: null, isAuthenticated: false });
-            },
-
-            // Convenience getter for role
-            isAdmin: (state) => state.user?.role === 'admin',
+            logout: () => set({ user: null, token: null, isAuthenticated: false }),
         }),
         {
             name: 'auth-storage',

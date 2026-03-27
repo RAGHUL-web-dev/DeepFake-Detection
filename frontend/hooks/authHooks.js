@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
 import { useRouter } from 'next/navigation';
 
@@ -19,13 +19,18 @@ const apiFetch = async (path, options = {}) => {
 // ─── AUTH Mutations ────────────────────────────────────────────────────────────
 
 export const useRegisterUser = () => {
+    const { setAuth } = useAuthStore();
     const router = useRouter();
 
     return useMutation({
         mutationFn: (userData) =>
             apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
         onSuccess: (data) => {
-            if (data.success) router.push('/auth/login');
+            if (data.success) {
+                // Log them in immediately and send to home page
+                setAuth(data.user, data.token);
+                router.push('/');
+            }
         },
     });
 };
@@ -40,12 +45,8 @@ export const useLoginUser = () => {
         onSuccess: (data) => {
             if (data.success) {
                 setAuth(data.user, data.token);
-                // Role-based redirect
-                if (data.user?.role === 'admin') {
-                    router.push('/admin');
-                } else {
-                    router.push('/dashboard');
-                }
+                // Always redirect to home page — navbar handles role-aware dashboard link
+                router.push('/');
             }
         },
     });
@@ -53,17 +54,20 @@ export const useLoginUser = () => {
 
 export const useLogoutUser = () => {
     const { logout } = useAuthStore();
+    const queryClient = useQueryClient();
     const router = useRouter();
 
     return useMutation({
-        mutationFn: () => apiFetch('/auth/logout'),
+        mutationFn: () => apiFetch('/auth/logout', { method: 'GET' }),
         onSuccess: () => {
             logout();
+            queryClient.clear();
             router.push('/auth/login');
         },
         onError: () => {
             // Always clear local state even if server errors
             logout();
+            queryClient.clear();
             router.push('/auth/login');
         }
     });
@@ -78,15 +82,18 @@ export const useCurrentUser = () => {
     return useQuery({
         queryKey: ['currentUser'],
         queryFn: async () => {
-            const data = await apiFetch('/user/me');
-            setUser(data.user);
-            return data;
+            try {
+                const data = await apiFetch('/auth/me');
+                setUser(data.user);
+                return data;
+            } catch (err) {
+                logout(); // clear stale local state if session expired
+                throw err;
+            }
         },
         retry: false,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        onError: () => {
-            logout(); // clear stale local state if session expired
-        }
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -107,3 +114,22 @@ export const useUserMedia = () => {
         staleTime: 1000 * 60 * 2,
     });
 };
+
+export const useUpdateProfile = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (userData) =>
+            apiFetch('/auth/update-details', { method: 'PUT', body: JSON.stringify(userData) }),
+        onSuccess: () => {
+            queryClient.invalidateQueries(['currentUser']);
+        },
+    });
+};
+
+export const useUpdatePassword = () => {
+    return useMutation({
+        mutationFn: (passwords) =>
+            apiFetch('/auth/password/update', { method: 'PUT', body: JSON.stringify(passwords) }),
+    });
+};
+

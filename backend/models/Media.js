@@ -68,9 +68,8 @@ const mediaSchema = new mongoose.Schema(
 );
 
 // Update timestamps on save
-mediaSchema.pre("save", function(next) {
+mediaSchema.pre("save", function() {
     this.updatedAt = Date.now();
-    next();
 });
 
 module.exports = mongoose.model("Media", mediaSchema);

@@ -46,7 +46,7 @@ const CTASection = () => {
                             transition={{ duration: 0.6, delay: 0.4 }}
                             className="flex flex-col sm:flex-row gap-6 justify-center pt-8"
                         >
-                            <Link href="/auth/register" className="group bg-white text-[#5C45FD] px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl hover:bg-[#F5F5F5] transition-all flex items-center justify-center gap-2">
+                            <Link href="/knowledge" className="group bg-white text-[#5C45FD] px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl hover:bg-[#F5F5F5] transition-all flex items-center justify-center gap-2">
                                 Get Started Free
                                 <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                             </Link>
